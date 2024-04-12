@@ -8,6 +8,8 @@ import "leaflet/dist/leaflet.css";
 import * as L from "leaflet";
 
 const initialMap = ref(null);
+let arrowMarker = null; // Reference to the arrow marker
+let treasureAreaCircle = null; // Reference to the treasure area circle
 
 onMounted(() => {
   // Create the map
@@ -21,24 +23,38 @@ onMounted(() => {
 
   // Add geolocation functionality
   if ("geolocation" in navigator) {
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        initialMap.value.setView([latitude, longitude], 16); // Zoom in with a zoom level of 16
-        L.marker([latitude, longitude])
-          .addTo(initialMap.value)
-          .bindPopup("You are here", { maxWidth: "auto" })
-          .openPopup();
 
-        // Calculate coordinates for treasure area 50 meters away
-        const { lat: newLat, lng: newLng } = calculateOffsetCoordinates(
-          latitude,
-          longitude,
-          50
-        );
+        // If arrow marker doesn't exist, create it
+        if (!arrowMarker) {
+          createArrowMarker([latitude, longitude]);
+        } else {
+          // Update arrow marker position
+          arrowMarker.setLatLng([latitude, longitude]);
+        }
 
-        // Show treasure area at calculated coordinates
-        showTreasureArea(newLat, newLng);
+        // Center map at user's position without changing zoom level
+        initialMap.value.panTo([latitude, longitude]);
+
+        // Update treasure area position
+        if (treasureAreaCircle) {
+          const { lat: newLat, lng: newLng } = calculateOffsetCoordinates(
+            latitude,
+            longitude,
+            50
+          );
+          treasureAreaCircle.setLatLng([newLat, newLng]);
+        } else {
+          // Create treasure area if it doesn't exist
+          const { lat: newLat, lng: newLng } = calculateOffsetCoordinates(
+            latitude,
+            longitude,
+            50
+          );
+          createTreasureArea([newLat, newLng]);
+        }
       },
       (error) => {
         console.error("Error getting geolocation:", error);
@@ -46,6 +62,33 @@ onMounted(() => {
     );
   } else {
     console.error("Geolocation is not supported by your browser");
+  }
+
+  // Function to create arrow marker
+  function createArrowMarker(coordinates) {
+    // Define custom arrow icon
+    const arrowIcon = L.divIcon({
+      className: "custom-marker",
+      html: '<i class="fas fa-arrow-up"></i>',
+      iconSize: [30, 30],
+    });
+
+    // Create marker with custom icon
+    arrowMarker = L.marker(coordinates, { icon: arrowIcon })
+      .addTo(initialMap.value)
+      .bindPopup("You are here", { maxWidth: "auto" })
+      .openPopup();
+  }
+
+  // Function to create treasure area circle
+  function createTreasureArea(coordinates) {
+    treasureAreaCircle = L.circle(coordinates, {
+      color: "blue",
+      fillColor: "#add8e6",
+      fillOpacity: 0.5,
+      radius: 30, // Adjust radius as needed
+    }).addTo(initialMap.value);
+    treasureAreaCircle.bindPopup("Treasure area!");
   }
 
   // Function to calculate coordinates offset by distance (in meters)
@@ -59,29 +102,16 @@ onMounted(() => {
     const newLng = lng + lngOffset;
     return { lat: newLat, lng: newLng };
   }
-
-  // Function to show treasure area at a specific location
-  function showTreasureArea(lat, lng) {
-    const treasureCenter = [lat, lng];
-    const treasureAreaCircle = L.circle(treasureCenter, {
-      color: "blue",
-      fillColor: "#add8e6",
-      fillOpacity: 0.5,
-      radius: 30, // Adjust radius as needed
-    }).addTo(initialMap.value);
-    treasureAreaCircle.bindPopup("Treasure area!");
-
-    // Define the point within the area for the popup
-    const popupPoint = L.latLng(lat, lng); // Adjust as needed
-
-    // Bind popup to the specific point inside the area
-    L.popup({
-      maxHeight: "auto",
-      maxWidth: "auto",
-    })
-      .setLatLng(popupPoint)
-      .setContent("<div class='popup-content'>Treasure here!</div>")
-      .openOn(initialMap.value);
-  }
 });
 </script>
+
+<style>
+.custom-marker {
+  text-align: center;
+  line-height: 30px;
+  color: #ffffff;
+  font-size: 20px;
+  background-color: #007bff;
+  border-radius: 50%;
+}
+</style>
