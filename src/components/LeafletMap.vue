@@ -6,6 +6,7 @@
 import { ref, onMounted } from "vue";
 import "leaflet/dist/leaflet.css";
 import * as L from "leaflet";
+import arrowIconUrl from "@/assets/arrow.png"; // Import your PNG file
 
 const initialMap = ref(null);
 let arrowMarker = null; // Reference to the arrow marker
@@ -13,7 +14,7 @@ let treasureAreaCircle = null; // Reference to the treasure area circle
 
 onMounted(() => {
   // Create the map
-  initialMap.value = L.map("map").setView([0, 0], 16); // Centered at [0, 0] with a zoom level of 16
+  initialMap.value = L.map("map").setView([0, 0], 20); // Centered at [0, 0] with a zoom level of 16
 
   // Add tile layer from OpenStreetMap
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -66,18 +67,13 @@ onMounted(() => {
 
   // Function to create arrow marker
   function createArrowMarker(coordinates) {
-    // Define custom arrow icon
-    const arrowIcon = L.divIcon({
-      className: "custom-marker",
-      html: '<i class="fas fa-arrow-up"></i>',
-      iconSize: [30, 30],
-    });
-
     // Create marker with custom icon
-    arrowMarker = L.marker(coordinates, { icon: arrowIcon })
-      .addTo(initialMap.value)
-      .bindPopup("You are here", { maxWidth: "auto" })
-      .openPopup();
+    arrowMarker = L.marker(coordinates, {
+      icon: L.icon({
+        iconUrl: arrowIconUrl,
+        iconSize: [30, 30],
+      }),
+    }).addTo(initialMap.value);
   }
 
   // Function to create treasure area circle
@@ -88,7 +84,9 @@ onMounted(() => {
       fillOpacity: 0.5,
       radius: 30, // Adjust radius as needed
     }).addTo(initialMap.value);
-    treasureAreaCircle.bindPopup("Treasure area!");
+    treasureAreaCircle.bindPopup("Treasure area!", {
+      className: "popup-style",
+    }); // Add custom popup style
   }
 
   // Function to calculate coordinates offset by distance (in meters)
@@ -106,12 +104,20 @@ onMounted(() => {
 </script>
 
 <style>
-.custom-marker {
-  text-align: center;
-  line-height: 30px;
-  color: #ffffff;
-  font-size: 20px;
-  background-color: #007bff;
-  border-radius: 50%;
+/* Styles for the custom marker */
+.popup-style {
+  /*background-color: white;  Change this color to your preferred color */
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.leaflet-popup-content-wrapper {
+  background: transparent; /* Make popup background transparent */
+}
+
+.leaflet-popup-tip {
+  background: transparent; /* Make popup tip transparent */
 }
 </style>
