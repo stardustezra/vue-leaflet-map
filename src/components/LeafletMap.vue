@@ -113,10 +113,6 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.leaflet-popup-content-wrapper {
-  background: transparent; /* Make popup background transparent */
-}
-
 .leaflet-popup-tip {
   background: transparent; /* Make popup tip transparent */
 }
