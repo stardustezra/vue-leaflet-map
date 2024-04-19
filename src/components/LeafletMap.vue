@@ -6,7 +6,7 @@
 import { ref, onMounted } from "vue";
 import "leaflet/dist/leaflet.css";
 import * as L from "leaflet";
-import arrowIconUrl from "@/assets/arrow.png"; // Import your PNG file
+import arrowIconUrl from "@/assets/arrow.png";
 
 const initialMap = ref(null);
 let arrowMarker = null; // Reference to the arrow marker
@@ -39,22 +39,12 @@ onMounted(() => {
         // Center map at user's position without changing zoom level
         initialMap.value.panTo([latitude, longitude]);
 
-        // Update treasure area position
+        // Update treasure area position to hardcoded value [55.4043, 10.37975]
         if (treasureAreaCircle) {
-          const { lat: newLat, lng: newLng } = calculateOffsetCoordinates(
-            latitude,
-            longitude,
-            50
-          );
-          treasureAreaCircle.setLatLng([newLat, newLng]);
+          treasureAreaCircle.setLatLng([55.4043, 10.37975]);
         } else {
           // Create treasure area if it doesn't exist
-          const { lat: newLat, lng: newLng } = calculateOffsetCoordinates(
-            latitude,
-            longitude,
-            50
-          );
-          createTreasureArea([newLat, newLng]);
+          createTreasureArea([55.4043, 10.37975]);
         }
       },
       (error) => {
@@ -82,23 +72,11 @@ onMounted(() => {
       color: "blue",
       fillColor: "#add8e6",
       fillOpacity: 0.5,
-      radius: 30, // Adjust radius as needed
+      radius: 20, // Adjust radius as needed
     }).addTo(initialMap.value);
     treasureAreaCircle.bindPopup("Treasure area!", {
       className: "popup-style",
     }); // Add custom popup style
-  }
-
-  // Function to calculate coordinates offset by distance (in meters)
-  function calculateOffsetCoordinates(lat, lng, distance) {
-    const earthRadius = 6378137; // Earth's radius in meters
-    const latOffset = (distance / earthRadius) * (180 / Math.PI);
-    const lngOffset =
-      ((distance / earthRadius) * (180 / Math.PI)) /
-      Math.cos((lat * Math.PI) / 180);
-    const newLat = lat + latOffset;
-    const newLng = lng + lngOffset;
-    return { lat: newLat, lng: newLng };
   }
 });
 </script>
